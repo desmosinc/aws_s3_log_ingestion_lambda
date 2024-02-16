@@ -184,6 +184,21 @@ def _compress_payload(data):
     logger.debug(f"compressed size: {sys.getsizeof(payload)}")
     return payload
 
+def _get_custom_timestamp(log_type: str, message: str):
+    """
+    Derive custom timestamp for certain log formats.
+    """
+    if log_type == "cloudfront-web":
+        timestamp_matches = re.match(r"^([\d-]+\s[\d:]+)", message)
+        if timestamp_matches is not None:
+            return time.mktime((parser.parse(timestamp_matches.group(0))).timetuple())
+        else:
+            return ""
+    if log_type == "alb":
+        timestamp_string = message[5:message.find("Z")+1].strip()
+        if timestamp_string != "":
+            return time.mktime((parser.parse(timestamp_string)).timetuple())
+    return ""
 
 def _package_log_payload(data):
     """
@@ -194,16 +209,9 @@ def _package_log_payload(data):
 
     log_type = _get_log_type()
     for line in logLines:
-        if log_type == "cloudfront-web":
-            timestamp_matches = re.match(r"^([\d-]+\s[\d:]+)", line)
-            if timestamp_matches is not None:
-                timestamp = time.mktime((parser.parse(timestamp_matches.group(0))).timetuple())
-            else:
-                timestamp_string = ""
-            log_messages.append({'message': line, 'timestamp': timestamp })
-        elif log_type == "alb":
-            timestamp_matches = re.match(r"^([\d-]+\s[\d:]+)", line)
-            timestamp = time.mktime((parser.parse(timestamp_string)).timetuple())
+        custom_timestamp = _get_custom_timestamp(log_type, line)
+        if custom_timestamp != "":
+            log_messages.append({'message': line, 'timestamp': custom_timestamp })
         else:
             log_messages.append({'message': line})
     attributes = {
