@@ -199,8 +199,11 @@ def _package_log_payload(data):
             if timestamp_matches is not None:
                 timestamp = time.mktime((parser.parse(timestamp_matches.group(0))).timetuple())
             else:
-                timestamp = ""
+                timestamp_string = ""
             log_messages.append({'message': line, 'timestamp': timestamp })
+        elif log_type == "alb":
+            timestamp_matches = re.match(r"^([\d-]+\s[\d:]+)", line)
+            timestamp = time.mktime((parser.parse(timestamp_string)).timetuple())
         else:
             log_messages.append({'message': line})
     attributes = {
