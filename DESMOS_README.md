@@ -9,8 +9,11 @@ See DEVELOPER.md for more detailed instructions, which involve passing data thro
 
 ```shell
 make build
-LOG_TYPE=alb LICENSE_KEY=foobar TEST_FILE="./test/mock.json" make run
+LOG_TYPE=alb LICENSE_KEY=foobar TEST_FILE="./test/mock-alb.json" make run
 ```
+
+Alternately use `mock-cloudfront.json`. These are mock events which point to real S3 files we need to upload and create in our bucket. Note that the newrelic send will fail unless you also
+set newrelic key via an env var, but generally speaking getting that far is good enough.
 
 A faster way to test locally is to modify the `handler.py` script to directly run part of the code in the main function and then
 use a step debugger. E.g.:

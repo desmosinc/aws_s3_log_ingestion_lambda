@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventName": "ObjectCreated:Put",
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "bucket": {
+          "name": "newrelic-cloudfront-ingestion-lambda-package",
+          "arn": "arn:aws:s3:::newrelic-cloudfront-ingestion-lambda-package"
+        },
+        "object": {
+          "key": "test_data/Cloudfront_Test.log"
+        }
+      }
+    }
+  ]
+}
