@@ -36,6 +36,28 @@ make build
 BUCKET=newrelic-cloudfront-ingestion-lambda-package REGION=us-east-1 make package
 ```
 
-This will generate a new zip file to our S3 bucket, which you can then load into the lambda functions manually.
+This will generate a new zip file to our S3 bucket. You should see `uploading to <hash>` in the output (you'll also
+see some lines which say "File with same data already exists", which are expected). Then you'll need the S3 url for the 
+code package generated, which will look like `s3://newrelic-cloudfront-ingestion-lambda-package/<hash>`. You can paste
+that into the upload code from S3 dialog on the lambda function which you'd like to update.
 
 ## Lambda function setup
+
+The easiest way to proceed with lambda function setup is to copy the setup from another working deployment on our AWS account, e.g. https://us-east-1.console.aws.amazon.com/lambda/home?region=us-east-1#/functions/NewRelic-s3-log-ingestion-knox-alb?tab=code
+
+Key configuration options to set are:
+
+| Option                          | Setting                                                                                                                                                                                            |
+|---------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Runtime                         | Python                                                                                                                                                                                             |
+| Handler                         | `handler.lambda_handler` (this is different from the default)                                                                                                                                      |
+| `ADDITIONAL_ATTRIBUTES` env var | `{"service_name":"knox-production"}`  (or `knox-staging`, or `matomo`)                                                                                                                             |
+| `LICENSE_KEY` env var           | NewRelic license key                                                                                                                                                                               |    
+| `LOG_TYPE` env var              | String defining log type (e.g. `cloudfront`, `alb`, `nginx`). Some of these types are auto-parsed by NewRelic, but can also be an arbitrary string.                                                |
+| Timeout                         | Set to 15 minutes (higher than default)                                                                                                                                                            |
+| Execution Role                  | `arn:aws:iam::604097293469:role/serverlessrepo-NewRelic-l-NewRelicLogIngestionFunct-izPFLMbHJpsq`                                                                                                  |
+| Triggers                        | Add an S3 trigger for `s3:ObjectCreated:*`, tied to the bucket containing logs which you want to ingest. If this bucket contains logs for different services, you'll need to set a prefix as well. |
+
+To temporarily disable a lambda function (if we don't need logs ingested), delete the trigger and then recreate it later.
+
+To backfill logs for a time period where the lambda function wasn't running, you'll need to generate an inventory in S3 and run the lambda function via a batch process.
