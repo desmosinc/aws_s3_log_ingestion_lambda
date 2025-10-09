@@ -330,6 +330,8 @@ async def _fetch_data_from_s3(bucket, key, context):
 
             for index, log in enumerate(log_lines):
                 log_batch_size += sys.getsizeof(str(log))
+                if _get_log_type() == 'cloudfront-web' and log.startswith('#'):
+                    continue
                 if index % 500 == 0:
                     logger.debug(f"index: {index}")
                     logger.debug(f"log_batch_size: {log_batch_size}")
