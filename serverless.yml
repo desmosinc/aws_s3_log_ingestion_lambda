@@ -48,6 +48,7 @@ functions:
       S3_IGNORE_PATTERN: ${env:S3_IGNORE_PATTERN}
       BATCH_SIZE_FACTOR: ${env:BATCH_SIZE_FACTOR}
       ADDITIONAL_ATTRIBUTES: ${env:ADDITIONAL_ATTRIBUTES}
+      OVERRIDE_DATE: ${env:OVERRIDE_DATE}
       
     events:
       - s3:

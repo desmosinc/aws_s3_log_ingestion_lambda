@@ -43,6 +43,10 @@ Parameters:
     Type: String
     Description: "(Optional) A string containing json object(string,string). These attributes will be added to New Relic payload."
     Default: ""
+  OverrideDate:
+    Type: String
+    Description: "(Optional) A string of the form YYYY-MM-DD to override the date that we send to NewRelic for timestamps."
+    Default: ""
   S3CloudTrailLogPattern:
     Type: String
     Description: "(Optional) Regex pattern to check if the file is from CloudTrail"
@@ -92,6 +96,7 @@ Resources:
           S3_IGNORE_PATTERN: !Ref S3IgnorePattern
           BATCH_SIZE_FACTOR: !Ref BatchSizeFactor
           ADDITIONAL_ATTRIBUTES: !Ref AdditionalAttributes
+          OVERRIDE_DATE: !Ref OverrideDate
       PermissionsBoundary: !If [ HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue ]
       Role: !Ref FunctionRole         
       Policies:
@@ -129,6 +134,7 @@ Resources:
           S3_IGNORE_PATTERN: !Ref S3IgnorePattern
           BATCH_SIZE_FACTOR: !Ref BatchSizeFactor
           ADDITIONAL_ATTRIBUTES: !Ref AdditionalAttributes
+          OVERRIDE_DATE: !Ref OverrideDate
       PermissionsBoundary: !If [ HasPermissionBoundary, !Ref PermissionsBoundary, !Ref AWS::NoValue ]          
       Policies:
         - Version: '2012-10-17'
