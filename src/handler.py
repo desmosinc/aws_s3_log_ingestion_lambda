@@ -8,11 +8,12 @@ from urllib import request
 import aiohttp
 import asyncio
 import time
+import datetime
 import logging
 from smart_open import open
 import re
 from dateutil import parser
-
+from functools import cache
 
 logger = logging.getLogger()
 
@@ -78,7 +79,6 @@ BATCH_SIZE_FACTOR = 1.5
 REQUEST_BATCH_SIZE = 25
 
 completed_requests = 0
-
 
 class MaxRetriesException(Exception):
     pass
@@ -184,6 +184,15 @@ def _compress_payload(data):
     logger.debug(f"compressed size: {sys.getsizeof(payload)}")
     return payload
 
+@cache
+def _get_override_date():
+    override_date_str = _get_optional_env("OVERRIDE_DATE", "")
+    if override_date_str == "":
+        return False
+    if not re.match(r"^\d{4}-\d{2}-\d{2}$", override_date_str):
+        raise InvalidArgumentException("Override date must be in the format YYYY-MM-DD")
+    return parser.parse(_get_optional_env("OVERRIDE_DATE", "")).timetuple()
+
 def _get_custom_timestamp(log_type: str, message: str):
     """
     Derive custom timestamp for certain log formats.
@@ -191,7 +200,12 @@ def _get_custom_timestamp(log_type: str, message: str):
     if log_type == "cloudfront-web":
         timestamp_matches = re.match(r"^([\d-]+\s[\d:]+)", message)
         if timestamp_matches is not None:
-            return time.mktime((parser.parse(timestamp_matches.group(0))).timetuple())
+            parsed_timestamp = parser.parse(timestamp_matches.group(0))
+            override_date = _get_override_date()
+            if override_date:
+                return time.mktime(parsed_timestamp.replace(month=override_date.tm_mon, day=override_date.tm_mday, year=override_date.tm_year).timetuple())
+            else:
+                return time.mktime((parser.parse(timestamp_matches.group(0))).timetuple())
         else:
             return ""
     if log_type == "alb":
